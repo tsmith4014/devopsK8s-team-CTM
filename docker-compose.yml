@@ -1,0 +1,64 @@
+services:
+    database:
+        image: postgres:latest
+        container_name: postgres
+        ports:
+            - "${POSTGRES_PORT:-5432}:5432"
+        env_file:
+            - ./.env
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+            interval: 10s
+            retries: 5
+            start_period: 30s
+            timeout: 5s
+        volumes:
+            - postgres-data:/var/lib/postgresql/data/
+            # add initsql script to load fixtures
+            # - ./init_sql_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql 
+        networks:
+            - shredder
+
+    backend:
+        build:
+            context: ./devopsCapstoneBack
+            dockerfile: Dockerfile
+        image: zimmermantr/shredder_back
+        container_name: backend
+        env_file:
+            - ./devopsCapstoneBack/.env
+        ports:
+            - "${BACK_PORT:-8000}:8000"
+        networks:
+            - shredder
+        depends_on:
+            database:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "wget -qO- http://backend:8000/api/v1/health_check/ | grep 'healthy'"]
+            interval: 10s
+            retries: 5
+            start_period: 30s
+            timeout: 5s
+            
+    fronted:
+        build:
+            context: ./devopsCapstoneFront
+            dockerfile: Dockerfile
+        image: zimmermantr/shredder_front
+        container_name: frontend
+        ports:
+            - "${FRONT_PORT:-80}:80"
+        networks:
+            - shredder
+        depends_on:
+            backend:
+                condition: service_healthy
+    
+networks:
+    shredder:
+        name: shredder
+        driver: bridge
+
+volumes:
+    postgres-data: {}
