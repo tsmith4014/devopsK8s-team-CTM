@@ -1,0 +1,16 @@
+apiVersion: v1 
+kind: ConfigMap
+metadata:
+  name: shredder-config
+  namespace: shredder
+data:
+  database-port: "5432"
+  database-host: postgres-service
+  database-name: shredder_db
+  database-type: postgres
+  allowed-hosts: "*"
+  cors-allow-all-origins: "True"
+  cors-allowed-origins: "*"
+  csrf-trusted-origins: "http://localhost:8000,http://127.0.0.1:8000"
+  debug: "True"
+  vite-backend-url: "http://back-service:8000/api/v1/"
