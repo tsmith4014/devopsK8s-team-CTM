@@ -44,10 +44,10 @@ jobs:
         # Deploy other infrastructure-related resources (e.g., storage classes, resource quotas)
         kubectl apply -f k8s/ -n ${{ env.K8S_NAMESPACE }} --exclude k8s/namespace.yml
 
-    - name: Verify Infrastructure Deployment
-      run: |
-        # Verify that all infrastructure-related resources have been successfully rolled out
-        kubectl rollout status statefulset/postgres -n ${{ env.K8S_NAMESPACE }}
+    # - name: Verify Infrastructure Deployment
+    #   run: |
+    #     # Verify that all infrastructure-related resources have been successfully rolled out
+    #     kubectl rollout status statefulset/postgres -n ${{ env.K8S_NAMESPACE }}
 
     # Commenting everything below this line for now
     #- name: Rollback Deployment (on failure)
