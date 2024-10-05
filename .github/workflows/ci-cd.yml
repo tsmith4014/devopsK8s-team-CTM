@@ -1,0 +1,38 @@
+# ci-cd.yml (Infrastructure)
+name: Infrastructure CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  AWS_REGION: 'us-east-1'
+  K8S_NAMESPACE: 'shredder'
+  EKS_CLUSTER_NAME: 'your-eks-cluster'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Set up Kubeconfig
+      uses: azure/k8s-set-context@v1
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBECONFIG }}
+
+    - name: Deploy Infrastructure to Kubernetes
+      run: |
+        kubectl apply -f k8s/namespace.yml
+        kubectl apply -f k8s/storage-class.yml
+        kubectl apply -f k8s/resource-quotas.yml
