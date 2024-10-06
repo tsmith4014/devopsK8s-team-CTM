@@ -40,7 +40,7 @@ metadata:
   name: nginx-service
   namespace: shredder
 spec:
-  type: NodePort  # Change to LoadBalancer for production on EKS
+  type: LoadBalancer
   ports:
     - port: 80
       targetPort: 80

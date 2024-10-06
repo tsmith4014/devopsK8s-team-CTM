@@ -13,6 +13,48 @@ spec:
       labels:
         app: shredder-backend
     spec:
+      initContainers:
+      - name: init-db
+        image: zimmermantr/shredder_infrastructure:latest
+        command:
+          - sh
+          - -c
+          - |
+            until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do 
+              echo 'Waiting for PostgreSQL...'; 
+              sleep 2; 
+            done; 
+            echo 'PostgreSQL is ready. Loading data...';
+            PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER -d $POSTGRES_DB -f /app/db_backup.sql
+        env:
+          - name: POSTGRES_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: shredder-config
+                key: database-host
+          - name: POSTGRES_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: shredder-config
+                key: database-port
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: shredder-secret
+                key: postgres-username
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                name: shredder-config
+                key: database-name
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: shredder-secret
+                key: postgres-password
+        volumeMounts:
+          - name: db-backup
+            mountPath: /app
       containers:
         - name: shredder-backend
           image: zimmermantr/shredder_back:latest
@@ -95,3 +137,7 @@ spec:
             timeoutSeconds: 3
             successThreshold: 1
             failureThreshold: 3
+      volumes:
+      - name: db-backup
+        configMap:
+          name: db-backup-configmap
