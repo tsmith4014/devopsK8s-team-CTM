@@ -1,0 +1,57 @@
+# ci-cd.yml (Infrastructure)
+name: Infrastructure CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]  # Trigger the CI/CD pipeline whenever changes are pushed to the main branch
+
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+  AWS_REGION: ${{ secrets.AWS_REGION }} 
+  K8S_NAMESPACE: ${{ secrets.K8S_NAMESPACE }} 
+  EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }} 
+  # AWS_REGION: 'us-east-1'  # AWS region where the infrastructure is deployed
+  # K8S_NAMESPACE: 'shredder'  # Kubernetes namespace where resources will be deployed
+  # EKS_CLUSTER_NAME: 'shredder_cluster'  # Name of the EKS (Elastic Kubernetes Service) cluster
+
+jobs:
+  deploy_infrastructure:
+    runs-on: ubuntu-latest  # Use the latest version of Ubuntu as the operating system for the deployment environment
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3  # This action checks out the code from the GitHub repository to the deployment environment
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1  # Configure AWS credentials to interact with AWS services
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}  # AWS access key ID, stored securely in GitHub secrets
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # AWS secret access key, stored securely in GitHub secrets
+        aws-region: ${{ env.AWS_REGION }}  # AWS region for the infrastructure
+
+    - name: Set up Kubeconfig
+      uses: aws-actions/eks-update-kubeconfig@v1  # Set up kubeconfig to allow kubectl to communicate with the Kubernetes cluster
+      with:
+        region: ${{ env.AWS_REGION }}
+        cluster-name: ${{ env.EKS_CLUSTER_NAME }}
+        role-arn: ${{ secrets.AWS_ROLE_ARN }}  # AWS IAM role for accessing the EKS cluster, stored securely in GitHub secrets DO WE NEED THIS? 
+
+    - name: Deploy Infrastructure to Kubernetes
+      run: |
+        # Deploy the namespace to logically separate resources within the Kubernetes cluster
+        kubectl apply -f k8s/namespace.yml -n ${{ env.K8S_NAMESPACE }}
+        # Deploy other infrastructure-related resources (e.g., storage classes, resource quotas)
+        kubectl apply -f k8s/ -n ${{ env.K8S_NAMESPACE }} --exclude k8s/namespace.yml
+
+    # - name: Verify Infrastructure Deployment
+    #   run: |
+    #     # Verify that all infrastructure-related resources have been successfully rolled out
+    #     kubectl rollout status statefulset/postgres -n ${{ env.K8S_NAMESPACE }}
+
+    # Commenting everything below this line for now
+    #- name: Rollback Deployment (on failure)
+    #  if: failure()
+    #  run: |
+    #    # Rollback to the previous stable version if deployment fails
+    #    kubectl rollout undo deployment/shredder-infrastructure -n ${{ env.K8S_NAMESPACE }}
