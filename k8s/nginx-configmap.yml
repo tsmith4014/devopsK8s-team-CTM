@@ -26,3 +26,125 @@ data:
             proxy_cache_bypass $http_upgrade;
         }
     }
+
+
+
+
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: nginx-config
+#   namespace: shredder
+# data:
+#   nginx.conf: |
+#     server {
+#         listen 80;
+
+#         # Forward frontend requests to the frontend service
+#         location / {
+#             proxy_pass http://front-service:80;
+#             proxy_set_header Host $host;
+#             proxy_set_header X-Real-IP $remote_addr;
+#             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#             proxy_set_header X-Forwarded-Proto $scheme;
+#         }
+
+#         # Forward backend API requests to the backend service
+#         location /api/v1/ {
+#             proxy_pass http://back-service:8000;
+#             proxy_set_header Host $host;
+#             proxy_set_header X-Real-IP $remote_addr;
+#             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#             proxy_set_header X-Forwarded-Proto $scheme;
+#         }
+
+#         # Rewrite login URL to match Django's view
+#         location /api/v1/user/users/login/ {
+#             rewrite ^/api/v1/user/users/login/$ /login/ break;
+#             proxy_pass http://back-service:8000;
+#             proxy_set_header Host $host;
+#             proxy_set_header X-Real-IP $remote_addr;
+#             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#             proxy_set_header X-Forwarded-Proto $scheme;
+#         }
+
+#         # Similarly, add other rewrites if needed
+#         location /api/v1/user/users/register/ {
+#             rewrite ^/api/v1/user/users/register/$ /register/ break;
+#             proxy_pass http://back-service:8000;
+#             proxy_set_header Host $host;
+#             proxy_set_header X-Real-IP $remote_addr;
+#             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#             proxy_set_header X-Forwarded-Proto $scheme;
+#         }
+
+#         location /api/v1/user/users/logout/ {
+#             rewrite ^/api/v1/user/users/logout/$ /logout/ break;
+#             proxy_pass http://back-service:8000;
+#             proxy_set_header Host $host;
+#             proxy_set_header X-Real-IP $remote_addr;
+#             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#             proxy_set_header X-Forwarded-Proto $scheme;
+#         }
+#     }
+
+
+
+
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: nginx-config
+#   namespace: shredder
+# data:
+#   nginx.conf: |
+#     server {
+#         listen 80;
+
+#         # Forward frontend requests to the frontend service
+#         location / {
+#             proxy_pass http://front-service:80;
+#             proxy_set_header Host $host;
+#             proxy_set_header X-Real-IP $remote_addr;
+#             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#             proxy_set_header X-Forwarded-Proto $scheme;
+#         }
+
+#         # Forward backend API requests to the backend service
+#         location /api/v1/ {
+#             proxy_pass http://backend-service:8000;
+#             proxy_set_header Host $host;
+#             proxy_set_header X-Real-IP $remote_addr;
+#             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#             proxy_set_header X-Forwarded-Proto $scheme;
+#         }
+
+#         # Rewrite login URL to match Django's view
+#         location /api/v1/user/users/login/ {
+#             rewrite ^/api/v1/user/users/login/$ /api/v1/user/login/ break;
+#             proxy_pass http://backend-service:8000;
+#             proxy_set_header Host $host;
+#             proxy_set_header X-Real-IP $remote_addr;
+#             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#             proxy_set_header X-Forwarded-Proto $scheme;
+#         }
+
+#         # Similarly, add other rewrites if needed
+#         location /api/v1/user/users/register/ {
+#             rewrite ^/api/v1/user/users/register/$ /api/v1/user/register/ break;
+#             proxy_pass http://backend-service:8000;
+#             proxy_set_header Host $host;
+#             proxy_set_header X-Real-IP $remote_addr;
+#             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#             proxy_set_header X-Forwarded-Proto $scheme;
+#         }
+
+#         location /api/v1/user/users/logout/ {
+#             rewrite ^/api/v1/user/users/logout/$ /api/v1/user/logout/ break;
+#             proxy_pass http://backend-service:8000;
+#             proxy_set_header Host $host;
+#             proxy_set_header X-Real-IP $remote_addr;
+#             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#             proxy_set_header X-Forwarded-Proto $scheme;
+#         }
+#     }

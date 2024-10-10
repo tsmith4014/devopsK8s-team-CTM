@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: shredder-frontend
-          image: zimmermantr/shredder_front:latest
+          image: tsmith4014/shredder_front:latest
           ports:
             - containerPort: 80
           resources:

@@ -15,7 +15,7 @@ spec:
     spec:
       initContainers:
       - name: init-db
-        image: zimmermantr/shredder_infrastructure:latest
+        image: tsmith4014/shredder_infrastructure:latest
         command:
           - sh
           - -c
@@ -57,7 +57,7 @@ spec:
             mountPath: /app
       containers:
         - name: shredder-backend
-          image: zimmermantr/shredder_back:latest
+          image: tsmith4014/shredder_back:latest
           ports:
             - containerPort: 8000
           resources:
@@ -68,6 +68,11 @@ spec:
               cpu: "250m"
               memory: "256Mi"
           env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shredder-secret
+                  key: secret-key
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
@@ -108,6 +113,7 @@ spec:
                 configMapKeyRef:
                   name: shredder-config
                   key: cors-allow-all-origins
+            # Uncomment if needed
             # - name: CORS_ALLOWED_ORIGINS
             #   valueFrom:
             #     configMapKeyRef:
