@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: shredder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shredder-backend
+  template:
+    metadata:
+      labels:
+        app: shredder-backend
+    spec:
+      initContainers:
+      - name: init-db
+        image: zimmermantr/shredder_infrastructure:latest
+        command:
+          - sh
+          - -c
+          - |
+            until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do 
+              echo 'Waiting for PostgreSQL...'; 
+              sleep 2; 
+            done; 
+            echo 'PostgreSQL is ready. Loading data...';
+            PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER -d $POSTGRES_DB -f /app/db_backup.sql
+        env:
+          - name: POSTGRES_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: shredder-config
+                key: database-host
+          - name: POSTGRES_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: shredder-config
+                key: database-port
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: shredder-secret
+                key: postgres-username
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                name: shredder-config
+                key: database-name
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: shredder-secret
+                key: postgres-password
+        volumeMounts:
+          - name: db-backup
+            mountPath: /app
+      containers:
+        - name: shredder-backend
+          image: zimmermantr/shredder_back:latest
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: shredder-config
+                  key: database-name
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shredder-secret
+                  key: postgres-username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shredder-secret
+                  key: postgres-password
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: shredder-config
+                  key: database-port
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: shredder-config
+                  key: database-host
+            - name: DATABASE_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: shredder-config
+                  key: database-type
+            - name: ALLOWED_HOSTS
+              valueFrom:
+                configMapKeyRef:
+                  name: shredder-config
+                  key: allowed-hosts
+            - name: CORS_ALLOW_ALL_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: shredder-config
+                  key: cors-allow-all-origins
+            # - name: CORS_ALLOWED_ORIGINS
+            #   valueFrom:
+            #     configMapKeyRef:
+            #       name: shredder-config
+            #       key: cors-allowed-origins
+            # - name: CSRF_TRUSTED_ORIGINS
+            #   valueFrom:
+            #     configMapKeyRef:
+            #       name: shredder-config
+            #       key: csrf-trusted-origins
+            - name: DEBUG
+              valueFrom:
+                configMapKeyRef:
+                  name: shredder-config
+                  key: debug
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: shredder-config
+                  key: database-host
+          readinessProbe:
+            httpGet:
+              path: api/v1/health_check/
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+      volumes:
+      - name: db-backup
+        configMap:
+          name: db-backup-configmap

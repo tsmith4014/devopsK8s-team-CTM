@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: front-deployment
+  namespace: shredder
+spec:
+  selector:
+    matchLabels: # This is the label that the deployment will use to select the pods it manages
+      app: shredder
+  replicas: 1
+  template: # This is the pod template that the deployment will use to create new pods
+    metadata:
+      labels:
+        app: shredder # This is the label that the pod will use to identify itself
+    spec:
+      containers:
+        - name: shredder-frontend
+          image: zimmermantr/shredder_front:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          env:
+            - name: VITE_RAPID_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shredder-secret
+                  key: vite-rapid-api-key
+            - name: VITE_BACKEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: shredder-config
+                  key: vite-backend-url

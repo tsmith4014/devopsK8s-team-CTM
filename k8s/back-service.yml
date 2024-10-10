@@ -1,0 +1,13 @@
+apiVersion: v1 
+kind: Service
+metadata:
+  name: back-service
+  namespace: shredder
+spec:
+  selector: # This is the label that the service will use to select the pods it will route traffic to
+    app: shredder-backend
+  type: ClusterIP # This will expose the service on an internal IP in the cluster
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
